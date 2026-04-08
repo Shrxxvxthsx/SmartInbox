@@ -1,0 +1,130 @@
+name: SmartInboxEnv
+version: 0.1.0
+description: >
+  Smart Email Inbox Management RL Environment.
+  Agents learn to classify, prioritize, and respond to emails through
+  reinforcement learning. The environment evaluates actions on classification
+  accuracy, response quality, and action appropriateness, with rewards
+  normalized to [0, 1].
+
+environment:
+  class: env.environment.SmartInboxEnv
+  max_steps: 3
+  
+observation_space:
+  type: object
+  description: "Email observation with context and history."
+  properties:
+    email_text:
+      type: string
+      description: "The complete text of the incoming email."
+    sender:
+      type: string
+      description: "Email sender address or identifier."
+    sentiment:
+      type: string
+      enum: ["angry", "neutral", "happy"]
+      description: "Detected sentiment of the email."
+    priority:
+      type: string
+      enum: ["urgent", "normal", "spam"]
+      description: "Assigned priority level for the email."
+    history:
+      type: array
+      items:
+        type: string
+      description: "Historical conversation context for the email thread."
+
+action_space:
+  type: object
+  description: "Agent action to handle the email."
+  required: ["classification", "response", "action_type"]
+  properties:
+    classification:
+      type: string
+      enum: ["urgent", "normal", "spam"]
+      description: "Agent's classification of the email priority."
+    response:
+      type: string
+      description: "Text response or reply drafted by the agent. Empty for ignore actions."
+    action_type:
+      type: string
+      enum: ["reply", "escalate", "ignore"]
+      description: >
+        Action to take: 'reply' for composing a response,
+        'escalate' for forwarding to support, 'ignore' for marking as read.
+
+reward:
+  type: number
+  range: [0.0, 1.0]
+  description: >
+    Normalized reward score. Calculated from:
+    - Classification accuracy (30%)
+    - Response keyword match quality (40%)
+    - Action correctness (30%)
+    - Penalties for critical errors (e.g., replying to spam)
+
+tasks:
+  - name: "easy_welcome"
+    description: "Classify and respond to welcome onboarding emails."
+    difficulty: easy
+    episodes: 100
+    
+  - name: "easy_security"
+    description: "Identify security notifications and handle appropriately."
+    difficulty: easy
+    episodes: 100
+    
+  - name: "normal_meeting_reminder"
+    description: "Manage meeting reminder emails with context."
+    difficulty: normal
+    episodes: 80
+    
+  - name: "normal_order_tracking"
+    description: "Process order notifications and shipping updates."
+    difficulty: normal
+    episodes: 80
+    
+  - name: "spam_detection"
+    description: "Identify and avoid replying to spam emails."
+    difficulty: normal
+    episodes: 100
+    
+  - name: "urgent_business_request"
+    description: "Prioritize urgent business requests appropriately."
+    difficulty: medium
+    episodes: 60
+    
+  - name: "angry_customer"
+    description: "Handle upset customer escalations appropriately."
+    difficulty: hard
+    episodes: 50
+
+docker:
+  image: "smartinbox:latest"
+  dockerfile: "Dockerfile"
+  build_args:
+    PYTHON_VERSION: "3.11"
+    DEPENDENCIES: "openai pydantic pyyaml"
+
+requirements:
+  python: "3.11"
+  packages:
+    - openai>=1.0.0
+    - pydantic>=2.0.0
+    - pyyaml>=6.0
+    - numpy>=1.24.0
+
+evaluation:
+  metrics:
+    - name: "accuracy"
+      description: "Percentage of correctly classified emails."
+      
+    - name: "f1_score"
+      description: "F1 score across priority classes."
+      
+    - name: "response_quality"
+      description: "Keyword match ratio in drafted responses."
+      
+    - name: "safety"
+      description: "Absence of critical errors (e.g., spam replies)."

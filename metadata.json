@@ -1,0 +1,5 @@
+{
+  "name": "SmartInbox RL Environment",
+  "description": "A comprehensive design and simulation of an RL environment for email triage and response, featuring multi-step threads and sentiment analysis.",
+  "requestFramePermissions": []
+}
